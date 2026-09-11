@@ -92,6 +92,8 @@ export interface TitleMetadata {
   availabilityStatus: AvailabilityStatus
   lastMetadataUpdatedAt: string
   lastAvailabilityCheckedAt: string
+  collectionId: number | null       // TMDB collection ID (movies only)
+  collectionName: string | null
 }
 
 // ─── User Watchlist Entry (user-owned, will have userId in V2) ────────────────

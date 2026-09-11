@@ -125,6 +125,8 @@ export const tmdbMetadataProvider: MetadataProvider = {
       availabilityStatus: 'unknown',
       lastMetadataUpdatedAt: now,
       lastAvailabilityCheckedAt: now,
+      collectionId: isMovie ? (detail.belongs_to_collection?.id ?? null) : null,
+      collectionName: isMovie ? (detail.belongs_to_collection?.name ?? null) : null,
     }
   },
 }
