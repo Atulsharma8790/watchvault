@@ -350,11 +350,11 @@ export function AddTitleModal({ onClose, onAdd, checkDuplicate, region = 'IN' }:
                         {/* Clickable collection badge */}
                         {metadata.collectionId && (
                           <button onClick={handleOpenCollection}
-                            className="mt-2 flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold transition-all hover:opacity-80 active:scale-95"
-                            style={{ background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid rgba(232,197,71,0.3)' }}>
-                            <Library size={11} />
-                            {metadata.collectionName}
-                            <ChevronRight size={11} />
+                            className="mt-2 flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg font-semibold transition-all hover:brightness-110 active:scale-95"
+                            style={{ background: 'var(--accent)', color: '#0A0D14' }}>
+                            <Library size={12} />
+                            <span>Part of <strong>{metadata.collectionName}</strong></span>
+                            <span className="ml-auto opacity-70">Browse all →</span>
                           </button>
                         )}
 
