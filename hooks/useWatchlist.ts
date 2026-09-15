@@ -75,23 +75,28 @@ export function useWatchlist() {
     }
     const supabase = createClient()
     realtimeRef.current = supabase
-    const channelName = `watchlist-${user.id}`
-    const channel = supabase
-      .channel(channelName)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'watchlist_entries',
-        filter: `user_id=eq.${user.id}`,
-      }, () => { reload(userRef.current) })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'user_settings',
-        filter: `user_id=eq.${user.id}`,
-      }, () => { reload(userRef.current) })
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    const channelName = `watchlist-${user.id}-${Date.now()}`
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    try {
+      channel = supabase
+        .channel(channelName)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'watchlist_entries',
+          filter: `user_id=eq.${user.id}`,
+        }, () => { reload(userRef.current) })
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'user_settings',
+          filter: `user_id=eq.${user.id}`,
+        }, () => { reload(userRef.current) })
+        .subscribe()
+    } catch (e) {
+      console.warn('Realtime subscription failed (non-fatal):', e)
+    }
+    return () => { if (channel) supabase.removeChannel(channel) }
   }, [user, reload])
 
   // Check for local data to migrate when user first signs in
