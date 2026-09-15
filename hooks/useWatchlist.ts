@@ -28,6 +28,12 @@ export function useWatchlist() {
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS)
   const [migrationPending, setMigrationPending] = useState(false)
   const realtimeRef = useRef<ReturnType<typeof createClient> | null>(null)
+  const userRef = useRef<User | null>(null)
+  const filtersRef = useRef(filters)
+  const sortRef = useRef(sort)
+
+  useEffect(() => { filtersRef.current = filters }, [filters])
+  useEffect(() => { sortRef.current = sort }, [sort])
 
   // Track auth state
   useEffect(() => {
@@ -44,7 +50,7 @@ export function useWatchlist() {
     try {
       const repo = getRepo(currentUser)
       const [results, userSettings] = await Promise.all([
-        repo.search(filters, sort),
+        repo.search(filtersRef.current, sortRef.current),
         repo.getSettings(),
       ])
       setEntries(results)
@@ -52,12 +58,15 @@ export function useWatchlist() {
     } finally {
       setLoading(false)
     }
-  }, [filters, sort])
+  }, [])
+
+  // Keep userRef in sync
+  useEffect(() => { userRef.current = user }, [user])
 
   // Reload when user or filters/sort change
-  useEffect(() => { reload(user) }, [user, reload])
+  useEffect(() => { reload(user) }, [user, filters, sort, reload])
 
-  // Real-time subscription when signed in
+  // Real-time subscription when signed in — only re-subscribe when user changes
   useEffect(() => {
     if (!user) {
       realtimeRef.current?.removeAllChannels()
@@ -66,20 +75,21 @@ export function useWatchlist() {
     }
     const supabase = createClient()
     realtimeRef.current = supabase
+    const channelName = `watchlist-${user.id}`
     const channel = supabase
-      .channel('watchlist-changes')
+      .channel(channelName)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'watchlist_entries',
         filter: `user_id=eq.${user.id}`,
-      }, () => { reload(user) })
+      }, () => { reload(userRef.current) })
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'user_settings',
         filter: `user_id=eq.${user.id}`,
-      }, () => { reload(user) })
+      }, () => { reload(userRef.current) })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [user, reload])
