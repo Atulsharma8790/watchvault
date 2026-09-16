@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Mail, Loader2, CheckCircle, Clapperboard } from 'lucide-react'
+import { X, Mail, Loader2, CheckCircle } from 'lucide-react'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 
 interface Props {
@@ -35,9 +36,7 @@ export function AuthModal({ onClose }: Props) {
       <div className="w-full max-w-sm rounded-3xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border-strong)' }}>
         <div className="flex items-center justify-between px-6 pt-6 pb-2">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent)', color: '#0A0D14' }}>
-              <Clapperboard size={14} />
-            </div>
+            <Image src="/logo.svg" alt="WatchVault" width={28} height={28} />
             <span className="font-black text-base">WatchVault</span>
           </div>
           <button onClick={onClose} className="rounded-xl p-2 hover:bg-white/5" style={{ color: 'var(--muted)' }}><X size={16} /></button>

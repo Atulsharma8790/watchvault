@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Dark background -->
+  <circle cx="32" cy="32" r="32" fill="#0A0D14"/>
+  <!-- Outer vault ring -->
+  <circle cx="32" cy="32" r="27" fill="none" stroke="#E8C547" stroke-width="2.5"/>
+  <!-- Four bolt circles -->
+  <circle cx="32" cy="9"  r="3.5" fill="#E8C547"/>
+  <circle cx="55" cy="32" r="3.5" fill="#E8C547"/>
+  <circle cx="32" cy="55" r="3.5" fill="#E8C547"/>
+  <circle cx="9"  cy="32" r="3.5" fill="#E8C547"/>
+  <!-- Bolt spokes -->
+  <line x1="32" y1="12.5" x2="32" y2="18" stroke="#E8C547" stroke-width="1.8"/>
+  <line x1="51.5" y1="32" x2="46" y2="32" stroke="#E8C547" stroke-width="1.8"/>
+  <line x1="32" y1="51.5" x2="32" y2="46" stroke="#E8C547" stroke-width="1.8"/>
+  <line x1="12.5" y1="32" x2="18" y2="32" stroke="#E8C547" stroke-width="1.8"/>
+  <!-- Inner track ring -->
+  <circle cx="32" cy="32" r="19" fill="none" stroke="#E8C547" stroke-width="1" opacity="0.3"/>
+  <!-- Play triangle (the "watch" element) -->
+  <polygon points="27,22 27,42 46,32" fill="#E8C547"/>
+</svg>
