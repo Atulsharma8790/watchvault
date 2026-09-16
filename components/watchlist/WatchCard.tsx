@@ -73,27 +73,30 @@ export function WatchCard({ entry, onClick }: Props) {
       </div>
 
       {/* Info below poster */}
-      <div className="p-3">
-        <p className="font-semibold text-sm leading-snug line-clamp-2">{entry.title}</p>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
+      <div className="p-2 md:p-3">
+        <p className="font-semibold text-xs md:text-sm leading-snug line-clamp-2">{entry.title}</p>
+        <p className="text-xs mt-0.5 hidden sm:block" style={{ color: 'var(--muted)' }}>
           {[entry.releaseYear, entry.type === 'movie' ? 'Movie' : 'Series'].filter(Boolean).join(' · ')}
         </p>
+        <p className="text-xs mt-0.5 sm:hidden" style={{ color: 'var(--muted)' }}>{entry.releaseYear}</p>
 
-        {/* Streaming platforms */}
-        {streamPlatforms.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {streamPlatforms.slice(0, 2).map((a, i) => (
-              <span key={i} className="text-xs px-1.5 py-0.5 rounded-md font-medium"
-                style={{ background: 'var(--teal-dim)', color: 'var(--teal)' }}>
-                {a.platform}
-              </span>
-            ))}
-          </div>
-        ) : entry.availabilityStatus === 'rent_buy' ? (
-          <p className="text-xs mt-1.5" style={{ color: '#F59E0B' }}>🟡 Rent / Buy</p>
-        ) : entry.availabilityStatus === 'unavailable' ? (
-          <p className="text-xs mt-1.5" style={{ color: 'var(--muted)' }}>🔴 Not available</p>
-        ) : null}
+        {/* Streaming platforms — hidden on mobile */}
+        <div className="hidden sm:block">
+          {streamPlatforms.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {streamPlatforms.slice(0, 2).map((a, i) => (
+                <span key={i} className="text-xs px-1.5 py-0.5 rounded-md font-medium"
+                  style={{ background: 'var(--teal-dim)', color: 'var(--teal)' }}>
+                  {a.platform}
+                </span>
+              ))}
+            </div>
+          ) : entry.availabilityStatus === 'rent_buy' ? (
+            <p className="text-xs mt-1.5" style={{ color: '#F59E0B' }}>🟡 Rent / Buy</p>
+          ) : entry.availabilityStatus === 'unavailable' ? (
+            <p className="text-xs mt-1.5" style={{ color: 'var(--muted)' }}>🔴 Not available</p>
+          ) : null}
+        </div>
 
         {/* Personal rating */}
         {entry.personalRating && (
@@ -102,16 +105,16 @@ export function WatchCard({ entry, onClick }: Props) {
           </div>
         )}
 
-        {/* Cast */}
+        {/* Cast — hidden on mobile */}
         {entry.cast.length > 0 && (
-          <p className="text-xs mt-1.5 truncate" style={{ color: 'var(--muted)' }}>
+          <p className="hidden sm:block text-xs mt-1.5 truncate" style={{ color: 'var(--muted)' }}>
             {entry.cast.slice(0, 3).map(c => c.name).join(', ')}
           </p>
         )}
 
-        {/* Source */}
+        {/* Source — hidden on mobile */}
         {entry.source.name && (
-          <p className="text-xs mt-1.5 truncate" style={{ color: 'var(--muted)' }}>
+          <p className="hidden sm:block text-xs mt-1.5 truncate" style={{ color: 'var(--muted)' }}>
             From {entry.source.name}
           </p>
         )}

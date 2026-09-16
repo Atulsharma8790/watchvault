@@ -23,7 +23,7 @@ export default function DashboardPage() {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
-      if (e.key === 'n' || e.key === 'N') setShowAdd(true)
+      if (e.key === 'n' || e.key === 'N') { e.preventDefault(); setShowAdd(true) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -86,22 +86,23 @@ export default function DashboardPage() {
   return (
     <div className="p-5 md:p-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-start justify-between mb-8 gap-3">
         <div>
           <h1 className="text-2xl md:text-3xl font-black">Dashboard</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Your personal watchlist intelligence</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-shrink-0">
           <button onClick={pickForMe}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-all hover:opacity-80"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-semibold transition-all hover:opacity-80 whitespace-nowrap"
             style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text)' }}>
-            <Shuffle size={15} /> Pick for me
+            <Shuffle size={14} /> <span className="hidden sm:inline">Pick for me</span><span className="sm:hidden">Pick</span>
           </button>
           <button onClick={() => setShowAdd(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all hover:opacity-90"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold transition-all hover:opacity-90 whitespace-nowrap"
             style={{ background: 'var(--accent)', color: '#0A0D14' }}>
-            <Plus size={15} /> Add Title
-            <span className="hidden sm:inline text-xs opacity-60 ml-1 font-mono">N</span>
+            <Plus size={14} /> Add
+            <kbd className="hidden sm:inline ml-1 px-1 py-0.5 rounded text-xs font-mono opacity-60"
+              style={{ background: 'rgba(0,0,0,0.15)', border: '1px solid rgba(0,0,0,0.2)' }}>N</kbd>
           </button>
         </div>
       </div>
@@ -214,7 +215,7 @@ function Section({ title, onViewAll, children }: { title: string; onViewAll: str
         <h2 className="font-bold text-base">{title}</h2>
         <a href={onViewAll} className="text-xs font-medium transition-all hover:opacity-80" style={{ color: 'var(--accent)' }}>View all →</a>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3">
         {children}
       </div>
     </section>
