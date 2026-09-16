@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, Shuffle, Film, Tv, Clock, CheckCircle, Play, Pause, XCircle } from 'lucide-react'
 import Image from 'next/image'
 import { useWatchlist } from '@/hooks/useWatchlist'
@@ -12,11 +12,22 @@ import type { WatchlistEntry } from '@/lib/types/watchlist'
 import { useToast } from '@/components/ui/Toast'
 
 export default function DashboardPage() {
-  const { entries, loading, settings, addEntry, updateEntry, removeEntry, checkDuplicate, reload } = useWatchlist()
+  const { entries, loading, settings, addEntry, addEntries, updateEntry, removeEntry, checkDuplicate, reload } = useWatchlist()
   const { toast } = useToast()
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<WatchlistEntry | null>(null)
   const [smartPick, setSmartPick] = useState<WatchlistEntry | null>(null)
+
+  // Keyboard shortcut: press N to open Add modal (when not typing in an input)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
+      if (e.key === 'n' || e.key === 'N') setShowAdd(true)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const stats = useMemo(() => ({
     total: entries.length,
@@ -90,6 +101,7 @@ export default function DashboardPage() {
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all hover:opacity-90"
             style={{ background: 'var(--accent)', color: '#0A0D14' }}>
             <Plus size={15} /> Add Title
+            <span className="hidden sm:inline text-xs opacity-60 ml-1 font-mono">N</span>
           </button>
         </div>
       </div>
@@ -186,7 +198,7 @@ export default function DashboardPage() {
 
       {/* Modals */}
       {showAdd && (
-        <AddTitleModal onClose={() => setShowAdd(false)} onAdd={addEntry} checkDuplicate={checkDuplicate} region={settings.region} />
+        <AddTitleModal onClose={() => setShowAdd(false)} onAdd={addEntry} onAddMany={addEntries} checkDuplicate={checkDuplicate} region={settings.region} />
       )}
       {selected && (
         <DetailModal entry={selected} onClose={() => setSelected(null)} onUpdate={updateEntry} onDelete={async id => { await removeEntry(id); setSelected(null) }} />

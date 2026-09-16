@@ -122,6 +122,12 @@ export function useWatchlist() {
     await reload(user)
   }, [user, reload])
 
+  const addEntries = useCallback(async (entries: WatchlistEntry[]) => {
+    const repo = getRepo(user)
+    await Promise.all(entries.map(e => repo.add(e)))
+    await reload(user)
+  }, [user, reload])
+
   const updateEntry = useCallback(async (id: string, patch: Partial<WatchlistEntry>) => {
     await getRepo(user).update(id, patch)
     await reload(user)
@@ -158,7 +164,7 @@ export function useWatchlist() {
     user, entries, loading, filters, sort, settings,
     migrationPending, migrateLocalData,
     setFilters, setSort,
-    addEntry, updateEntry, removeEntry,
+    addEntry, addEntries, updateEntry, removeEntry,
     checkDuplicate, saveSettings,
     exportJson, importJson, clearAll,
     reload: () => reload(user),

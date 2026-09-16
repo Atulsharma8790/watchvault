@@ -13,7 +13,7 @@ import { DEFAULT_FILTERS } from '@/lib/types/watchlist'
 const GENRES = ['Action', 'Comedy', 'Crime', 'Drama', 'Fantasy', 'History', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller']
 
 export default function WatchlistPage() {
-  const { entries, loading, filters, sort, settings, setFilters, setSort, addEntry, updateEntry, removeEntry, checkDuplicate } = useWatchlist()
+  const { entries, loading, filters, sort, settings, setFilters, setSort, addEntry, addEntries, updateEntry, removeEntry, checkDuplicate } = useWatchlist()
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<WatchlistEntry | null>(null)
   const [view, setView] = useState<'grid' | 'list'>('grid')
@@ -28,7 +28,7 @@ export default function WatchlistPage() {
   const activeFilterCount = [
     filters.type !== 'all', filters.status !== 'all', filters.priority !== 'all',
     filters.genre, filters.platform, filters.minRating !== null,
-    filters.availabilityStatus !== 'all',
+    filters.availabilityStatus !== 'all', filters.cast,
   ].filter(Boolean).length
 
   function clearFilters() {
@@ -128,6 +128,13 @@ export default function WatchlistPage() {
               <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--muted)' }}>Platform</label>
               <input value={filters.platform} onChange={e => setFilters(f => ({ ...f, platform: e.target.value }))}
                 placeholder="Netflix, Prime…"
+                className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+            </div>
+            <div>
+              <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--muted)' }}>Cast / Actor</label>
+              <input value={filters.cast} onChange={e => setFilters(f => ({ ...f, cast: e.target.value }))}
+                placeholder="e.g. Tom Hanks"
                 className="w-full rounded-xl px-3 py-2 text-sm outline-none"
                 style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
             </div>
@@ -250,7 +257,7 @@ export default function WatchlistPage() {
       )}
 
       {/* Modals */}
-      {showAdd && <AddTitleModal onClose={() => setShowAdd(false)} onAdd={addEntry} checkDuplicate={checkDuplicate} region={settings.region} />}
+      {showAdd && <AddTitleModal onClose={() => setShowAdd(false)} onAdd={addEntry} onAddMany={addEntries} checkDuplicate={checkDuplicate} region={settings.region} />}
       {selected && <DetailModal entry={selected} onClose={() => setSelected(null)} onUpdate={updateEntry} onDelete={async id => { await removeEntry(id); setSelected(null) }} />}
     </div>
   )

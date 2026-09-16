@@ -156,6 +156,7 @@ export interface WatchlistFilters {
   availabilityStatus: AvailabilityStatus | 'all'
   language: string
   sourceType: SourceType | 'all'
+  cast: string
 }
 
 export type SortField =
@@ -185,6 +186,7 @@ export const DEFAULT_FILTERS: WatchlistFilters = {
   availabilityStatus: 'all',
   language: '',
   sourceType: 'all',
+  cast: '',
 }
 
 export const DEFAULT_SORT: SortState = {

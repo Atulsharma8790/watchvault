@@ -23,6 +23,7 @@ interface CollectionPart {
 interface Props {
   onClose: () => void
   onAdd: (entry: WatchlistEntry) => Promise<void>
+  onAddMany?: (entries: WatchlistEntry[]) => Promise<void>
   checkDuplicate: (tmdbId: number) => Promise<WatchlistEntry | null>
   region?: string
 }
@@ -42,7 +43,7 @@ function buildEntry(metadata: TitleMetadata, opts: {
   return { id: generateId(), ...metadata, watchStatus: opts.status, priority: opts.priority, personalRating: opts.personalRating, personalNotes: opts.notes, source, createdAt: now, updatedAt: now }
 }
 
-export function AddTitleModal({ onClose, onAdd, checkDuplicate, region = 'IN' }: Props) {
+export function AddTitleModal({ onClose, onAdd, onAddMany, checkDuplicate, region = 'IN' }: Props) {
   const { query, results, searching, fetchingMeta, error, search, fetchMetadata, clear } = useSearch()
   const { toast } = useToast()
   const [step, setStep] = useState<Step>('search')
@@ -126,18 +127,20 @@ export function AddTitleModal({ onClose, onAdd, checkDuplicate, region = 'IN' }:
         await onAdd(entry)
         toast(`"${metadata.title}" added!`, 'success')
       } else if (step === 'collection') {
-        let added = 0
-        for (const part of collectionParts) {
-          if (!selectedParts.has(part.tmdbId)) continue
-          if (alreadySaved.has(part.tmdbId)) continue
+        const toAdd = collectionParts.filter(p => selectedParts.has(p.tmdbId) && !alreadySaved.has(p.tmdbId))
+        const entries: WatchlistEntry[] = []
+        for (const part of toAdd) {
           try {
             const meta = await fetchMetadata(part.tmdbId, 'movie', region)
             if (!meta) continue
-            await onAdd(buildEntry(meta, { ...opts, personalRating: null, notes: '' }))
-            added++
+            entries.push(buildEntry(meta, { ...opts, personalRating: null, notes: '' }))
           } catch { /* skip failed */ }
         }
-        toast(`Added ${added} title${added !== 1 ? 's' : ''} from ${collectionName}!`, 'success')
+        if (entries.length > 0) {
+          if (onAddMany) await onAddMany(entries)
+          else for (const e of entries) await onAdd(e)
+        }
+        toast(`Added ${entries.length} title${entries.length !== 1 ? 's' : ''} from ${collectionName}!`, 'success')
       }
       onClose()
     } catch {

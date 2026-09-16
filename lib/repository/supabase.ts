@@ -106,6 +106,7 @@ function matchesFilters(entry: WatchlistEntry, filters: WatchlistFilters): boole
   }
   if (filters.availabilityStatus !== 'all' && entry.availabilityStatus !== filters.availabilityStatus) return false
   if (filters.language && !entry.languages.some(l => l.toLowerCase().includes(filters.language.toLowerCase()))) return false
+  if (filters.cast && !entry.cast.some(c => c.name.toLowerCase().includes(filters.cast.toLowerCase()))) return false
   return true
 }
 

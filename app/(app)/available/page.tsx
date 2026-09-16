@@ -10,7 +10,7 @@ import { AddTitleModal } from '@/components/search/AddTitleModal'
 import type { WatchlistEntry } from '@/lib/types/watchlist'
 
 export default function AvailablePage() {
-  const { entries, loading, settings, addEntry, updateEntry, removeEntry, checkDuplicate } = useWatchlist()
+  const { entries, loading, settings, addEntry, addEntries, updateEntry, removeEntry, checkDuplicate } = useWatchlist()
   const [selected, setSelected] = useState<WatchlistEntry | null>(null)
   const [showAdd, setShowAdd] = useState(false)
 
@@ -116,7 +116,7 @@ export default function AvailablePage() {
         </section>
       ))}
 
-      {showAdd && <AddTitleModal onClose={() => setShowAdd(false)} onAdd={addEntry} checkDuplicate={checkDuplicate} region={settings.region} />}
+      {showAdd && <AddTitleModal onClose={() => setShowAdd(false)} onAdd={addEntry} onAddMany={addEntries} checkDuplicate={checkDuplicate} region={settings.region} />}
       {selected && <DetailModal entry={selected} onClose={() => setSelected(null)} onUpdate={updateEntry} onDelete={async id => { await removeEntry(id); setSelected(null) }} />}
     </div>
   )

@@ -102,6 +102,13 @@ export function WatchCard({ entry, onClick }: Props) {
           </div>
         )}
 
+        {/* Cast */}
+        {entry.cast.length > 0 && (
+          <p className="text-xs mt-1.5 truncate" style={{ color: 'var(--muted)' }}>
+            {entry.cast.slice(0, 3).map(c => c.name).join(', ')}
+          </p>
+        )}
+
         {/* Source */}
         {entry.source.name && (
           <p className="text-xs mt-1.5 truncate" style={{ color: 'var(--muted)' }}>
