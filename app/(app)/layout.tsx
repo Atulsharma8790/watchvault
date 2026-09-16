@@ -1,9 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, List, Tv, Settings, LogIn, LogOut, Upload, User } from 'lucide-react'
+import { LayoutDashboard, List, Tv, Settings, Clapperboard, LogIn, LogOut, Upload, User } from 'lucide-react'
 import { ToastProvider } from '@/components/ui/Toast'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { useAuth } from '@/hooks/useAuth'
@@ -36,8 +35,11 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex w-56 flex-shrink-0 flex-col fixed top-0 left-0 h-screen"
         style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
         <div className="px-5 py-6">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <Image src="/logo.svg" alt="WatchVault" width={32} height={32} className="flex-shrink-0" />
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: 'var(--accent)', color: '#0A0D14' }}>
+              <Clapperboard size={15} />
+            </div>
             <span className="font-black text-base tracking-tight" style={{ color: 'var(--text)' }}>WatchVault</span>
           </Link>
         </div>
