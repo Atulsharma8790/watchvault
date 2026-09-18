@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, LayoutGrid, List, SlidersHorizontal, X } from 'lucide-react'
+import { Plus, LayoutGrid, List, SlidersHorizontal, X, ChevronDown, ChevronRight, Film } from 'lucide-react'
 import { useWatchlist } from '@/hooks/useWatchlist'
 import { WatchCard } from '@/components/watchlist/WatchCard'
 import { DetailModal } from '@/components/watchlist/DetailModal'
@@ -9,6 +9,44 @@ import { AddTitleModal } from '@/components/search/AddTitleModal'
 import { SearchBar } from '@/components/search/SearchBar'
 import type { WatchlistEntry, SortField } from '@/lib/types/watchlist'
 import { DEFAULT_FILTERS } from '@/lib/types/watchlist'
+
+type SingleItem = { type: 'single'; entry: WatchlistEntry }
+type CollectionGroup = { type: 'collection'; collectionId: number; collectionName: string; entries: WatchlistEntry[] }
+type GroupedItem = SingleItem | CollectionGroup
+
+function groupEntries(entries: WatchlistEntry[]): GroupedItem[] {
+  const collMap = new Map<number, CollectionGroup>()
+  const items: GroupedItem[] = []
+  for (const entry of entries) {
+    if (entry.collectionId) {
+      if (!collMap.has(entry.collectionId)) {
+        const g: CollectionGroup = { type: 'collection', collectionId: entry.collectionId, collectionName: entry.collectionName ?? 'Collection', entries: [] }
+        collMap.set(entry.collectionId, g)
+        items.push(g)
+      }
+      collMap.get(entry.collectionId)!.entries.push(entry)
+    } else {
+      items.push({ type: 'single', entry })
+    }
+  }
+  return items
+}
+
+type Segment = { type: 'singles'; entries: WatchlistEntry[] } | CollectionGroup
+
+function toSegments(grouped: GroupedItem[]): Segment[] {
+  const segs: Segment[] = []
+  for (const item of grouped) {
+    if (item.type === 'single') {
+      const last = segs[segs.length - 1]
+      if (last?.type === 'singles') last.entries.push(item.entry)
+      else segs.push({ type: 'singles', entries: [item.entry] })
+    } else {
+      segs.push(item)
+    }
+  }
+  return segs
+}
 
 const GENRES = ['Action', 'Comedy', 'Crime', 'Drama', 'Fantasy', 'History', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller']
 
@@ -19,6 +57,17 @@ export default function WatchlistPage() {
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [showFilters, setShowFilters] = useState(false)
   const [localQuery, setLocalQuery] = useState('')
+  const [collapsedCollections, setCollapsedCollections] = useState<Set<number>>(new Set())
+
+  function toggleCollection(id: number) {
+    setCollapsedCollections(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const grouped = groupEntries(entries)
 
   useEffect(() => {
     const t = setTimeout(() => setFilters(f => ({ ...f, query: localQuery })), 200)
@@ -216,43 +265,119 @@ export default function WatchlistPage() {
 
       {/* Grid view */}
       {!loading && entries.length > 0 && view === 'grid' && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          {entries.map(e => <WatchCard key={e.id} entry={e} onClick={() => setSelected(e)} />)}
+        <div className="space-y-4">
+          {toSegments(grouped).map((seg, i) => {
+            if (seg.type === 'singles') {
+              return (
+                <div key={`singles-${i}`} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  {seg.entries.map(e => <WatchCard key={e.id} entry={e} onClick={() => setSelected(e)} />)}
+                </div>
+              )
+            }
+            const collapsed = collapsedCollections.has(seg.collectionId)
+            return (
+              <div key={`coll-${seg.collectionId}`} className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', background: 'var(--card)' }}>
+                <button onClick={() => toggleCollection(seg.collectionId)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/3 transition-all">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-dim)' }}>
+                    <Film size={14} style={{ color: 'var(--accent)' }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm truncate">{seg.collectionName}</p>
+                    <p className="text-xs" style={{ color: 'var(--muted)' }}>{seg.entries.length} film{seg.entries.length !== 1 ? 's' : ''} · Collection</p>
+                  </div>
+                  {collapsed ? <ChevronRight size={16} style={{ color: 'var(--muted)' }} /> : <ChevronDown size={16} style={{ color: 'var(--muted)' }} />}
+                </button>
+                {!collapsed && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 p-3 pt-0">
+                    {seg.entries.map(e => <WatchCard key={e.id} entry={e} onClick={() => setSelected(e)} />)}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 
       {/* List view */}
       {!loading && entries.length > 0 && view === 'list' && (
         <div className="space-y-2">
-          {entries.map(e => (
-            <button key={e.id} onClick={() => setSelected(e)}
-              className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left transition-all hover:bg-white/3"
-              style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-              {e.poster
-                ? <img src={e.poster} alt={e.title} className="w-10 h-14 rounded-lg object-cover flex-shrink-0" />
-                : <div className="w-10 h-14 rounded-lg flex-shrink-0" style={{ background: 'var(--border)' }} />
-              }
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{e.title}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
-                  {e.releaseYear} · {e.type === 'movie' ? 'Movie' : 'Series'} · {e.genres.slice(0, 2).join(', ')}
-                </p>
+          {grouped.map(item => {
+            if (item.type === 'single') {
+              const e = item.entry
+              return (
+                <button key={e.id} onClick={() => setSelected(e)}
+                  className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left transition-all hover:bg-white/3"
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                  {e.poster
+                    ? <img src={e.poster} alt={e.title} className="w-10 h-14 rounded-lg object-cover flex-shrink-0" />
+                    : <div className="w-10 h-14 rounded-lg flex-shrink-0" style={{ background: 'var(--border)' }} />
+                  }
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{e.title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
+                      {e.releaseYear} · {e.type === 'movie' ? 'Movie' : 'Series'} · {e.genres.slice(0, 2).join(', ')}
+                    </p>
+                  </div>
+                  <div className="hidden md:flex items-center gap-3 text-xs" style={{ color: 'var(--muted)' }}>
+                    {(e.ratings.imdb ?? e.ratings.tmdb) && <span style={{ color: 'var(--accent)' }}>⭐ {e.ratings.imdb ?? e.ratings.tmdb}</span>}
+                    {e.availability.slice(0, 1).map((a, i) => <span key={i} style={{ color: 'var(--teal)' }}>{a.platform}</span>)}
+                  </div>
+                  <div className="flex flex-col gap-1 flex-shrink-0">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      e.watchStatus === 'watched' ? 'bg-green-500/15 text-green-400' :
+                      e.watchStatus === 'watching' ? 'bg-teal-500/15 text-teal-400' :
+                      'bg-blue-500/15 text-blue-400'
+                    }`}>
+                      {e.watchStatus === 'want_to_watch' ? 'Want' : e.watchStatus === 'watching' ? 'Watching' : e.watchStatus === 'watched' ? 'Watched' : e.watchStatus}
+                    </span>
+                  </div>
+                </button>
+              )
+            }
+            // Collection group in list view
+            const collapsed = collapsedCollections.has(item.collectionId)
+            return (
+              <div key={`coll-${item.collectionId}`} className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', background: 'var(--card)' }}>
+                <button onClick={() => toggleCollection(item.collectionId)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/3 transition-all">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-dim)' }}>
+                    <Film size={14} style={{ color: 'var(--accent)' }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm truncate">{item.collectionName}</p>
+                    <p className="text-xs" style={{ color: 'var(--muted)' }}>{item.entries.length} film{item.entries.length !== 1 ? 's' : ''} · Collection</p>
+                  </div>
+                  {collapsed ? <ChevronRight size={16} style={{ color: 'var(--muted)' }} /> : <ChevronDown size={16} style={{ color: 'var(--muted)' }} />}
+                </button>
+                {!collapsed && (
+                  <div className="px-4 pb-3 space-y-2">
+                    {item.entries.map(e => (
+                      <button key={e.id} onClick={() => setSelected(e)}
+                        className="w-full flex items-center gap-4 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-white/3"
+                        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                        {e.poster
+                          ? <img src={e.poster} alt={e.title} className="w-8 h-12 rounded-lg object-cover flex-shrink-0" />
+                          : <div className="w-8 h-12 rounded-lg flex-shrink-0" style={{ background: 'var(--border)' }} />
+                        }
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{e.title}</p>
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{e.releaseYear} · {e.genres.slice(0, 2).join(', ')}</p>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                          e.watchStatus === 'watched' ? 'bg-green-500/15 text-green-400' :
+                          e.watchStatus === 'watching' ? 'bg-teal-500/15 text-teal-400' :
+                          'bg-blue-500/15 text-blue-400'
+                        }`}>
+                          {e.watchStatus === 'want_to_watch' ? 'Want' : e.watchStatus === 'watching' ? 'Watching' : e.watchStatus === 'watched' ? 'Watched' : e.watchStatus}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="hidden md:flex items-center gap-3 text-xs" style={{ color: 'var(--muted)' }}>
-                {(e.ratings.imdb ?? e.ratings.tmdb) && <span style={{ color: 'var(--accent)' }}>⭐ {e.ratings.imdb ?? e.ratings.tmdb}</span>}
-                {e.availability.slice(0, 1).map((a, i) => <span key={i} style={{ color: 'var(--teal)' }}>{a.platform}</span>)}
-              </div>
-              <div className="flex flex-col gap-1 flex-shrink-0">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  e.watchStatus === 'watched' ? 'bg-green-500/15 text-green-400' :
-                  e.watchStatus === 'watching' ? 'bg-teal-500/15 text-teal-400' :
-                  'bg-blue-500/15 text-blue-400'
-                }`}>
-                  {e.watchStatus === 'want_to_watch' ? 'Want' : e.watchStatus === 'watching' ? 'Watching' : e.watchStatus === 'watched' ? 'Watched' : e.watchStatus}
-                </span>
-              </div>
-            </button>
-          ))}
+            )
+          })}
         </div>
       )}
 
