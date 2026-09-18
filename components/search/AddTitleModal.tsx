@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, Loader2, Plus, Film, Tv, ChevronRight, Check, ArrowLeft, Library } from 'lucide-react'
 import { useSearch } from '@/hooks/useSearch'
 import { useToast } from '@/components/ui/Toast'
@@ -48,6 +48,8 @@ export function AddTitleModal({ onClose, onAdd, onAddMany, checkDuplicate, regio
   const { toast } = useToast()
   const [step, setStep] = useState<Step>('search')
   const [selected, setSelected] = useState<SearchResult | null>(null)
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
+  const resultRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [metadata, setMetadata] = useState<TitleMetadata | null>(null)
   const [duplicate, setDuplicate] = useState<WatchlistEntry | null>(null)
   const [saving, setSaving] = useState(false)
@@ -67,6 +69,42 @@ export function AddTitleModal({ onClose, onAdd, onAddMany, checkDuplicate, regio
   const [sourceType, setSourceType] = useState<SourceType | ''>('')
   const [sourceName, setSourceName] = useState('')
   const [sourceNote, setSourceNote] = useState('')
+
+  // Reset highlight when results change
+  useEffect(() => { setHighlightedIndex(-1) }, [results])
+
+  // Keyboard navigation for search results
+  useEffect(() => {
+    if (step !== 'search') return
+    function onKey(e: KeyboardEvent) {
+      if (results.length === 0) return
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setHighlightedIndex(i => {
+          const next = Math.min(i + 1, results.length - 1)
+          resultRefs.current[next]?.scrollIntoView({ block: 'nearest' })
+          return next
+        })
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setHighlightedIndex(i => {
+          const next = Math.max(i - 1, 0)
+          resultRefs.current[next]?.scrollIntoView({ block: 'nearest' })
+          return next
+        })
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        if (highlightedIndex >= 0 && results[highlightedIndex]) {
+          handleSelectResult(results[highlightedIndex])
+        }
+      } else if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, results, highlightedIndex])
 
   async function handleSelectResult(result: SearchResult) {
     setSelected(result)
@@ -268,10 +306,10 @@ export function AddTitleModal({ onClose, onAdd, onAddMany, checkDuplicate, regio
                 {error && <p className="text-sm text-red-400">{error}</p>}
                 {results.length > 0 && (
                   <div className="space-y-2">
-                    {results.map(r => (
-                      <button key={r.tmdbId} onClick={() => handleSelectResult(r)}
+                    {results.map((r, i) => (
+                      <button key={r.tmdbId} ref={el => { resultRefs.current[i] = el }} onClick={() => handleSelectResult(r)}
                         className="w-full flex items-center gap-4 rounded-2xl p-3 text-left transition-all hover:bg-white/5"
-                        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                        style={{ background: i === highlightedIndex ? 'var(--accent-dim)' : 'var(--card)', border: `1px solid ${i === highlightedIndex ? 'var(--accent)' : 'var(--border)'}` }}>
                         {r.poster
                           ? <Image src={r.poster} alt={r.title} width={44} height={64} className="rounded-lg object-cover flex-shrink-0" style={{ width: 44, height: 64 }} />
                           : <div className="w-11 h-16 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--border)' }}>
